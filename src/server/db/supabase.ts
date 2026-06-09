@@ -1,3 +1,4 @@
+import ws from 'ws';
 import { createClient } from '@supabase/supabase-js';
 import { config } from '../utils/config';
 
@@ -9,7 +10,11 @@ import { config } from '../utils/config';
  */
 export const supabaseAnon = createClient(
   config.SUPABASE_URL,
-  config.SUPABASE_ANON_KEY
+  config.SUPABASE_ANON_KEY,
+  {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    realtime: { transport: ws as any },
+  }
 );
 
 /**
@@ -26,5 +31,7 @@ export const supabaseAdmin = createClient(
       autoRefreshToken: false,
       persistSession: false,
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    realtime: { transport: ws as any },
   }
 );
