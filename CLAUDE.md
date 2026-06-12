@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current State
 
-This repo is **greenfield**. The only substantive spec is `Dewcall-PRD.md` — a complete product spec (this `CLAUDE.md` and a `memory/` index also exist now). No code, `package.json`, build tooling, or git history exists yet. Treat the PRD as the source of truth for architecture, data model, API surface, and the exact LLM system prompts. Before building, scaffold the project per the PRD's structure (`Dewcall-PRD.md` §2.2) and apply the database schema (§3.1).
+**Sessions 1–11 are complete.** The backend is fully built and deployed to Railway. This includes: TypeScript monolith scaffolded, Supabase schema applied, call pipeline (`call-scheduler`, `call-engine`, `call-agent`, `brief-generator`, `brief-delivery`, `flag-handler`) implemented, REST API routes with Supabase RLS auth middleware, and Railway deployment config. The GitHub repo is `hustle-grover/DewCall-app` on `main`. **Session 12 starts the dashboard** (`/src/dashboard` — React + Vite + Tailwind).
+
+The primary spec is `Dewcall-PRD.md`. Treat it as the source of truth for architecture, data model, API surface, and the exact LLM system prompts. `DESIGN.md` is the source of truth for all frontend visual decisions.
 
 **The app is named Dewcall.** "MorningBrief" was an earlier working title used while writing the PRD — it is obsolete. Use **Dewcall** everywhere: package name, user-facing strings, `APP_URL`, env naming, etc. The spec's filename was renamed to `Dewcall-PRD.md`, but its *body text* still says "MorningBrief" throughout — read it as "Dewcall."
 
@@ -67,3 +69,27 @@ Config is env-driven (`/src/server/utils/config.ts`); the full list is in `Dewca
 ## Build Order (PRD's recommendation)
 
 Backend first: scaffold → apply schema → get `call-engine.ts` + `call-agent.ts` working for one real test call → then brief generation → then delivery → then build the dashboard outward. Get one real call working end-to-end before broadening.
+
+## Frontend Design Rules
+
+ALWAYS read DESIGN.md before writing any frontend code.
+Run /impeccable after building each page.
+Run /interface-design:init at the start of each dashboard session.
+
+NEVER use:
+- Generic color schemes (purple gradients, clinical white-blue, teal wellness)
+- Inter as display font (body only — Playfair Display for all headlines)
+- Harsh drop shadows or heavy borders on cards
+- "Dashboard", "analytics", "metrics", "data" language in copy
+- Medical/clinical terms (patient, user, wellness data)
+- Generic empty states ("No data available", "Nothing here yet")
+- Uppercase button text
+- Dark mode (DewCall is a warm light-mode product)
+
+ALWAYS:
+- Reference DESIGN.md tokens by name, never hardcode hex values
+- Use Playfair Display for all emotional/headline moments
+- Write copy as if texting a caring family member
+- Mobile-first — check mobile layout before desktop
+- Keep max content width 680px on desktop
+- Declare design choices before writing each component

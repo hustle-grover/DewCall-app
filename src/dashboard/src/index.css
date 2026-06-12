@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-bg:        #FDFAF6;
+    --color-surface:   #FFFFFF;
+    --color-primary:   #4A7C6F;
+    --color-accent:    #E8956D;
+    --color-text:      #2D2D2D;
+    --color-muted:     #717171;   /* darkened from #8C8C8C for WCAG AA: 4.7:1 on surface */
+    --color-border:    #EDE8E0;
+    --color-flag-bg:   #FEF3EC;
+    --color-flag-text: #C4521A;
+
+    /* mood-score — used as dynamic left-rule on the brief card article (intentional exception) */
+    --color-mood-5: #4A7C6F;
+    --color-mood-4: #6B9E92;
+    --color-mood-3: #E8956D;
+    --color-mood-2: #D4956D;
+    --color-mood-1: #C4521A;
+  }
+
+  html,
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  /* Balanced line-wrapping on all headings */
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+
+  /* Reduce orphans in prose */
+  p {
+    text-wrap: pretty;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
