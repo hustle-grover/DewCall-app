@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, memo } from 'react'
 import { ChevronDown, ChevronUp, Phone } from 'lucide-react'
 import { api } from '../lib/api'
 import { moodColor, moodEmoji, moodHeadline } from '../lib/mood'
@@ -45,7 +45,7 @@ function groupBriefsByDate(briefs: CallLog[]): BriefGroup[] {
 
 // ── History card ─────────────────────────────────────────────────────────────
 
-function HistoryCard({ brief, seniorName }: { brief: CallLog; seniorName: string }) {
+const HistoryCard = memo(function HistoryCard({ brief, seniorName }: { brief: CallLog; seniorName: string }) {
   const [expanded, setExpanded] = useState(false)
 
   const borderColor = moodColor(brief.mood_score)
@@ -137,7 +137,7 @@ function HistoryCard({ brief, seniorName }: { brief: CallLog; seniorName: string
       )}
     </article>
   )
-}
+})
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 

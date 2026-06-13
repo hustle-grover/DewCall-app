@@ -10,9 +10,27 @@ import { startScheduler } from './services/call-scheduler';
 
 const app = express();
 
+// ── CORS ────────────────────────────────────────────────────────────────────
+// Explicit allowlist — open cors() was replaced to avoid exposing the API to
+// arbitrary origins. Localhost ports cover Vite dev (5173) and preview (4173/4174).
+const ALLOWED_ORIGINS = new Set<string>([
+  'http://localhost:5173',
+  'http://localhost:4173',
+  'http://localhost:4174',
+  config.APP_URL,
+  ...(config.FRONTEND_URL ? [config.FRONTEND_URL] : []),
+]);
+
 // ── Middleware ──────────────────────────────────────────────────────────────
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+  origin: (origin, cb) => {
+    // No origin = server-to-server or same-origin (curl, Twilio webhooks, health checks)
+    if (!origin || ALLOWED_ORIGINS.has(origin)) return cb(null, true);
+    cb(new Error(`CORS: origin not allowed: ${origin}`));
+  },
+  credentials: true,
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 

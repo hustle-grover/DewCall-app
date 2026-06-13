@@ -35,6 +35,7 @@ const configSchema = z.object({
 
   // App
   APP_URL: z.string().url(),
+  FRONTEND_URL: z.string().url().optional(),  // production frontend domain (if separate from APP_URL)
   PORT: z.coerce.number().int().positive().default(3000),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   // Admin secret for /api/admin/* routes — required when deploying

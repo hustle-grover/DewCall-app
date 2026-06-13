@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, memo } from 'react'
 import { ChevronDown, ChevronUp, Phone } from 'lucide-react'
 import { api } from '../lib/api'
 import { useAuth } from '../lib/auth'
@@ -72,7 +72,7 @@ function EmptyState() {
   )
 }
 
-function BriefCard({ brief, seniorName }: { brief: CallLog; seniorName: string }) {
+const BriefCard = memo(function BriefCard({ brief, seniorName }: { brief: CallLog; seniorName: string }) {
   const [transcriptOpen, setTranscriptOpen] = useState(false)
 
   const borderColor = moodColor(brief.mood_score)
@@ -193,7 +193,7 @@ function BriefCard({ brief, seniorName }: { brief: CallLog; seniorName: string }
       )}
     </article>
   )
-}
+})
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 

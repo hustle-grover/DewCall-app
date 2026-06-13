@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { NavLink } from 'react-router-dom'
 import { Heart, Clock, TrendingUp, User, Settings } from 'lucide-react'
 
@@ -9,7 +10,7 @@ const navItems = [
   { to: '/settings',icon: Settings,    label: 'Settings', end: false },
 ]
 
-export default function NavBar() {
+export default memo(function NavBar() {
   return (
     <>
       {/* ── Desktop sidebar ──────────────────────────────────────────── */}
@@ -72,4 +73,4 @@ export default function NavBar() {
       </nav>
     </>
   )
-}
+})

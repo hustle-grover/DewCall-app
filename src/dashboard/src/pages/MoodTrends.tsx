@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, memo } from 'react'
 import {
   LineChart, Line, XAxis, YAxis, Tooltip,
   ResponsiveContainer, ReferenceLine,
@@ -63,6 +63,48 @@ function StatCard({ label, children }: { label: string; children: React.ReactNod
     </div>
   )
 }
+
+// ── Memoized chart ───────────────────────────────────────────────────────────
+
+const MoodChart = memo(function MoodChart({ data }: { data: MoodDataPoint[] }) {
+  return (
+    <ResponsiveContainer width="100%" height={220}>
+      <LineChart data={data} margin={{ top: 12, right: 8, left: -28, bottom: 0 }}>
+        <ReferenceLine y={3} stroke="#EDE8E0" strokeDasharray="0" />
+        <XAxis
+          dataKey="date"
+          tickFormatter={(d: string) =>
+            new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+          }
+          tick={{ fontSize: 11, fill: '#717171', fontFamily: 'Inter, system-ui, sans-serif' }}
+          interval={6}
+          axisLine={false}
+          tickLine={false}
+        />
+        <YAxis
+          domain={[1, 5]}
+          ticks={[1, 2, 3, 4, 5]}
+          tickFormatter={(v: number) =>
+            ({ 1: '😟', 2: '😐', 3: '🙂', 4: '😊', 5: '⭐' }[v] ?? '')
+          }
+          tick={{ fontSize: 13 }}
+          axisLine={false}
+          tickLine={false}
+          width={36}
+        />
+        <Tooltip content={<CustomTooltip />} />
+        <Line
+          type="monotone"
+          dataKey="mood_score"
+          stroke="#4A7C6F"
+          strokeWidth={2}
+          dot={<CustomDot />}
+          activeDot={{ r: 6, fill: '#4A7C6F', stroke: 'white', strokeWidth: 2 }}
+        />
+      </LineChart>
+    </ResponsiveContainer>
+  )
+})
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 
@@ -224,41 +266,7 @@ export default function MoodTrends() {
         <h2 className="font-display text-lg font-semibold text-dew-text mb-4">
           Last 30 days
         </h2>
-        <ResponsiveContainer width="100%" height={220}>
-          <LineChart data={data} margin={{ top: 12, right: 8, left: -28, bottom: 0 }}>
-            <ReferenceLine y={3} stroke="#EDE8E0" strokeDasharray="0" />
-            <XAxis
-              dataKey="date"
-              tickFormatter={(d: string) =>
-                new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-              }
-              tick={{ fontSize: 11, fill: '#717171', fontFamily: 'Inter, system-ui, sans-serif' }}
-              interval={6}
-              axisLine={false}
-              tickLine={false}
-            />
-            <YAxis
-              domain={[1, 5]}
-              ticks={[1, 2, 3, 4, 5]}
-              tickFormatter={(v: number) =>
-                ({ 1: '😟', 2: '😐', 3: '🙂', 4: '😊', 5: '⭐' }[v] ?? '')
-              }
-              tick={{ fontSize: 13 }}
-              axisLine={false}
-              tickLine={false}
-              width={36}
-            />
-            <Tooltip content={<CustomTooltip />} />
-            <Line
-              type="monotone"
-              dataKey="mood_score"
-              stroke="#4A7C6F"
-              strokeWidth={2}
-              dot={<CustomDot />}
-              activeDot={{ r: 6, fill: '#4A7C6F', stroke: 'white', strokeWidth: 2 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+        <MoodChart data={data} />
       </div>
 
       {/* ── Topics ───────────────────────────────────────────────────── */}
