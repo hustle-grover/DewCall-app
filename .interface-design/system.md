@@ -200,14 +200,156 @@ transition-colors
 - Padding: `px-3 py-1`
 - Inter `text-xs font-medium`
 
+### HistoryCard (BriefHistory)
+
+Compact history entry — same structural family as BriefCard but condensed for timeline use.
+
+**Root element:** `<article aria-label="Brief for {seniorName}" class="bg-dew-surface rounded-card shadow-card overflow-hidden">`
+- `style={{ borderLeft: '3px solid {moodColor}' }}` — same mood-stripe exception as BriefCard (see Exceptions)
+
+**Header zone:** `px-5 pt-5 pb-3`
+```
+flex items-start gap-3
+  <span aria-hidden="true" class="text-3xl leading-none shrink-0 mt-0.5">  ← mood emoji, decorative
+  <div class="flex-1 min-w-0">
+    <h3 class="font-display text-base font-semibold text-dew-text leading-snug">  ← moodHeadline
+    <div class="mt-1 flex items-center gap-1.5 text-xs text-dew-muted">
+      <Phone size={11} aria-hidden="true" />
+      <span>{callTime} · {answered} · {duration}</span>
+  {hasFlags && <span class="text-sm shrink-0" aria-label="Flags noted">⚠️</span>}
+```
+
+**Brief body:** `px-5 pb-3 font-body text-sm text-dew-text leading-[1.65]` + expand/collapse
+- Collapsed: first 2 lines; "Read more" / "Show less" toggle
+- Toggle button: `text-xs font-medium text-dew-primary flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-dew-primary`
+- `aria-expanded={bool}` on toggle button
+
+**Topic chips:** `px-5 pb-4 flex flex-wrap gap-1.5` — identical to BriefCard chips
+
+**Date group label** (above each day's group in BriefHistory):
+```
+<p class="text-sm font-body font-medium text-dew-muted mb-3">
+  {dateLabel}   ← "Today", "Yesterday", "Thursday, 29 May"
+```
+**DO NOT** add `uppercase tracking-wide` — that is the absolute-banned eyebrow pattern.
+
+---
+
+### DeliveryChannelPicker
+
+Reusable component at `src/components/DeliveryChannelPicker.tsx`. Used in Onboarding step 4 and Settings.
+
+```
+<div class="grid grid-cols-2 gap-3">
+  {DELIVERY_CHANNELS.map(ch =>
+    <button
+      type="button"
+      aria-pressed={value === ch.id}
+      class="flex items-start gap-3 p-4 rounded-card border-[1.5px] text-left
+             transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-dew-primary
+             [selected]: border-dew-primary bg-dew-chip-bg
+             [default]:  border-dew-border bg-dew-surface hover:border-dew-primary/40"
+    >
+      <span aria-hidden="true" class="text-xl leading-none shrink-0 mt-0.5">{ch.icon}</span>
+      <div>
+        <p class="font-body text-sm font-semibold text-dew-text">{ch.title}</p>
+        <p class="font-body text-xs text-dew-muted mt-0.5">{ch.desc}</p>
+      </div>
+    </button>
+  )}
+</div>
+```
+- `aria-pressed` (not `aria-selected`) — these are toggle buttons, not a listbox
+- 2×2 grid, icon + title + description layout
+
+---
+
+### Onboarding Wizard
+
+Full-page step-by-step flow. `min-h-[100dvh]` layout (not inside the App layout shell).
+
+**Container:** `min-h-[100dvh] bg-dew-bg flex flex-col items-center justify-center px-4 py-8 overflow-y-auto`
+**Inner width:** `max-w-[560px] w-full` (narrower than content max — wizard is intimate, not wide)
+
+**Progress dots:**
+```
+<div role="progressbar"
+     aria-label="Setup progress"          ← stable label naming the widget
+     aria-valuenow={step + 1}
+     aria-valuemin={1}
+     aria-valuemax={TOTAL_STEPS}
+     aria-valuetext={`Step ${step + 1} of ${TOTAL_STEPS}`}   ← human-readable current value
+     class="flex gap-2 justify-center mb-10"
+>
+  {dots}: w-2 h-2 rounded-full
+    active:   bg-dew-primary
+    visited:  bg-dew-primary/40
+    upcoming: bg-dew-border
+```
+
+**Step heading block:** `mb-6 text-center`
+- `<h1 class="font-display text-[1.75rem] font-semibold text-dew-text leading-snug">`
+- `<p class="mt-2 font-body text-base text-dew-muted">` subtext (optional)
+
+**Step card:** `bg-dew-surface rounded-card shadow-card p-6 space-y-4` (all steps except final summary)
+
+**Navigation footer:** `flex justify-between items-center mt-8`
+- Back: `text-sm text-dew-muted hover:text-dew-text` (hidden on step 0)
+- Continue: primary button `px-6 py-2.5 rounded-button` — `disabled:opacity-40` when step validation fails
+
+**Final summary step (step 6):**
+- `text-center space-y-6` — no card wrapper, summary dl inside `bg-dew-surface rounded-card`
+- `<dl>` with `<div class="flex justify-between text-sm font-body">` rows
+- Submit button is full-width inside the step content, no separate nav footer
+
+---
+
+### MoodTrends StatCard
+
+Warm summary figures — NOT KPI tiles. Semantic alternatives to the hero-metric template.
+
+```
+<div class="bg-dew-surface rounded-card shadow-card p-5">
+  <p class="font-body text-xs text-dew-muted mb-1.5">{label}</p>
+  <p class="font-body text-base text-dew-text">
+    <span class="mr-1" aria-hidden="true">{moodEmoji}</span>
+    {moodLabel} on average    ← full sentence, not a bare number
+  </p>
+</div>
+```
+- Grid: `grid-cols-1 sm:grid-cols-3 gap-4` — **must be responsive**; `grid-cols-3` breaks on 375px phones
+- `text-xs` label + `text-base` warm sentence: this is NOT the banned hero-metric template
+- Hero-metric ban = big number + small label + gradient. StatCard uses prose text, no numbers.
+
+**recharts theming note:**
+Recharts SVG attrs (`stroke`, `fill`, `tick.fill`) cannot consume CSS custom properties — they require literal hex values. The values `#4A7C6F` (primary), `#EDE8E0` (border), `#717171` (muted) are hardcoded by necessity. This is a documented P2 theming limitation, not a token violation. Keep in sync with token changes manually.
+
+---
+
+### Section Divider (ParentProfile / Settings)
+
+Groups of related form fields separated by a horizontal rule + section heading. **No nested cards.**
+
+```html
+<hr class="border-dew-border my-8" />  (or mb-6 inside a div wrapper)
+<h2 class="font-display text-lg font-semibold text-dew-text mb-5">
+  {sectionTitle}
+</h2>
+```
+- Section content: `space-y-4` block of inputs below the h2
+- Heading hierarchy: page uses `<h1>`, sections use `<h2>` — maintained throughout
+- Use `<hr>` + `<h2>` **not** a card wrapper — nested cards are always wrong
+
+---
+
 ## Exceptions to the Side-Stripe Absolute Ban
 
 The impeccable absolute ban prohibits `border-left > 1px` as a colored accent on cards, list items, callouts, or alerts. **One documented exception:**
 
-**BriefCard mood stripe** — `style={{ borderLeft: '3px solid var(--color-mood-N)' }}` on the `<article>` element. Permitted because:
+**BriefCard and HistoryCard mood stripe** — `style={{ borderLeft: '3px solid var(--color-mood-N)' }}` on the `<article>` element. Permitted because:
 1. It carries semantic data (the mood score), not decoration. The color is drawn from the mood-score color system.
 2. It is applied to the outermost article, clipped by `overflow-hidden` on the card — not a child element creating a visual accent inside the card.
-3. Documented in the decision log as an intentional product signature.
+3. Consistent across both BriefCard (DailyBrief) and HistoryCard (BriefHistory) — product signature, not one-off decoration.
 
 All other side-stripe borders — on callouts, alerts, error messages, flag sections, list items — are banned. The flag section specifically uses `bg-dew-flag-bg` + leading 💛 emoji instead.
 
@@ -250,3 +392,8 @@ Prefers-reduced-motion handled globally in index.css: `animation-duration: 0.01m
 | Flag section: bg-tint + 💛 icon, no side-stripe | Side-stripe on callout is the impeccable absolute ban. Warm bg + leading emoji provides the alert register without the banned pattern. `role="status"` not `role="alert"` — avoids firing on initial mount. | 2026-06-12 |
 | `--color-muted` darkened `#8C8C8C` → `#717171` | Original value gave 3.23:1 on warm bg — fails WCAG AA (4.5:1). New value gives 4.70:1 on surface, 4.89:1 on white. | 2026-06-12 |
 | Locale `undefined` not `'en-GB'` in date formatters | Hardcoded locale violates web-design-guidelines; users in different regions see their own date format. | 2026-06-12 |
+| Date group labels in BriefHistory: `text-sm font-medium text-dew-muted`, NOT `uppercase tracking-wide` | `uppercase tracking-wide text-xs` is the absolute-banned eyebrow pattern, regardless of content. Dates use the same small-weight muted style. | 2026-06-12 |
+| MoodTrends stat cards: `grid-cols-1 sm:grid-cols-3` | `grid-cols-3` without breakpoint breaks on 375px phones (~109px per card). Always use responsive prefix. | 2026-06-12 |
+| Onboarding progressbar: `aria-label` stable + `aria-valuetext` for current value | `aria-label` names the widget ("Setup progress"). `aria-valuetext` conveys current state ("Step 3 of 7"). Mutating `aria-label` with step state creates confusing screen reader re-announcements. | 2026-06-12 |
+| Recharts hex values hardcoded: P2, documented exception | recharts SVG `stroke`/`fill`/`tick.fill` cannot consume CSS custom properties. Values must be kept manually in sync with token changes. | 2026-06-12 |
+| HistoryCard mood stripe: same exception as BriefCard | Both cards display mood-scored content; the stripe carries semantic data in both. Exception extends to all `<article>` elements that render a mood score. | 2026-06-12 |

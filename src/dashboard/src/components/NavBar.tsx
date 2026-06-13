@@ -16,7 +16,7 @@ export default function NavBar() {
       <aside className="hidden md:flex flex-col fixed inset-y-0 left-0 w-60 bg-dew-bg border-r border-dew-border z-40">
         <div className="px-6 pt-8 pb-6">
           <span className="font-display text-xl font-semibold text-dew-text tracking-tight">
-            DewCall
+            Dewcall
           </span>
         </div>
 

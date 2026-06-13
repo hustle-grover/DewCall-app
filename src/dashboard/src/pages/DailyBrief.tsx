@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { ChevronDown, ChevronUp, Phone } from 'lucide-react'
 import { api } from '../lib/api'
 import { useAuth } from '../lib/auth'
+import { moodColor, moodEmoji, moodHeadline } from '../lib/mood'
+import { formatCallTime, formatDuration } from '../lib/format'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -22,52 +24,6 @@ interface CallLog {
   topics_mentioned: string[] | null
   flags_detected:   string[] | null
   transcript:       string | null
-}
-
-// ── Mood helpers ─────────────────────────────────────────────────────────────
-
-const MOOD_COLORS: Record<number, string> = {
-  5: 'var(--color-mood-5)',
-  4: 'var(--color-mood-4)',
-  3: 'var(--color-mood-3)',
-  2: 'var(--color-mood-2)',
-  1: 'var(--color-mood-1)',
-}
-
-const MOOD_EMOJIS: Record<number, string> = {
-  5: '😊', 4: '🙂', 3: '😐', 2: '😟', 1: '⚠️',
-}
-
-function moodColor(score: number | null): string {
-  if (!score) return 'var(--color-muted)'
-  return MOOD_COLORS[Math.min(5, Math.max(1, Math.round(score)))] ?? 'var(--color-muted)'
-}
-
-function moodEmoji(score: number | null): string {
-  if (!score) return '😐'
-  return MOOD_EMOJIS[Math.min(5, Math.max(1, Math.round(score)))] ?? '😐'
-}
-
-function moodHeadline(score: number | null, name: string): string {
-  if (!score) return `${name}'s morning brief`
-  if (score >= 5) return `${name} sounded bright and cheerful this morning`
-  if (score >= 4) return `${name} was in good spirits this morning`
-  if (score >= 3) return `${name} seemed okay this morning`
-  if (score >= 2) return `${name} sounded a little quiet this morning`
-  return `${name} seemed to be having a harder morning`
-}
-
-// ── Formatting ───────────────────────────────────────────────────────────────
-
-function formatCallTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
-}
-
-function formatDuration(seconds: number | null): string {
-  if (!seconds) return ''
-  const m = Math.floor(seconds / 60)
-  const s = seconds % 60
-  return s > 0 ? `${m} min ${s} sec` : `${m} min`
 }
 
 // ── Sub-components ───────────────────────────────────────────────────────────
@@ -125,7 +81,6 @@ function BriefCard({ brief, seniorName }: { brief: CallLog; seniorName: string }
   const duration    = formatDuration(brief.duration_seconds)
   const answered    = brief.status === 'completed' ? 'Answered' : 'No answer'
 
-  // Split brief_text into paragraphs. Bullet lines start with •, -, or *.
   const lines = (brief.brief_text ?? '').split('\n').map(l => l.trim()).filter(Boolean)
 
   return (
@@ -134,7 +89,6 @@ function BriefCard({ brief, seniorName }: { brief: CallLog; seniorName: string }
       style={{ borderLeft: `3px solid ${borderColor}` }}
       aria-label={`Morning brief for ${seniorName}`}
     >
-      {/* ── Header ─────────────────────────────────────────────────── */}
       <header className="px-6 pt-6 pb-4">
         <div className="flex items-start gap-4">
           <span className="text-5xl leading-none shrink-0" aria-hidden="true">
@@ -148,7 +102,6 @@ function BriefCard({ brief, seniorName }: { brief: CallLog; seniorName: string }
 
       <hr className="border-dew-border mx-6" />
 
-      {/* ── Brief body ─────────────────────────────────────────────── */}
       <div className="px-6 py-5 font-body text-base text-dew-text leading-[1.75]">
         {lines.length > 0 ? (
           <div className="space-y-3">
@@ -170,7 +123,6 @@ function BriefCard({ brief, seniorName }: { brief: CallLog; seniorName: string }
         )}
       </div>
 
-      {/* ── Topic chips ────────────────────────────────────────────── */}
       {brief.topics_mentioned && brief.topics_mentioned.length > 0 && (
         <div className="px-6 pb-4 flex flex-wrap gap-2" aria-label="Topics mentioned">
           {brief.topics_mentioned.map(topic => (
@@ -184,7 +136,6 @@ function BriefCard({ brief, seniorName }: { brief: CallLog; seniorName: string }
         </div>
       )}
 
-      {/* ── Flag section ───────────────────────────────────────────── */}
       {brief.flags_detected && brief.flags_detected.length > 0 && (
         <div
           className="mx-6 mb-4 p-4 rounded-lg bg-dew-flag-bg font-body"
@@ -209,7 +160,6 @@ function BriefCard({ brief, seniorName }: { brief: CallLog; seniorName: string }
 
       <hr className="border-dew-border mx-6" />
 
-      {/* ── Footer ─────────────────────────────────────────────────── */}
       <footer className="px-6 py-3 flex items-center justify-between gap-4">
         <div className="flex items-center gap-1.5 text-xs font-body text-dew-muted">
           <Phone size={12} strokeWidth={1.5} aria-hidden="true" />
@@ -234,7 +184,6 @@ function BriefCard({ brief, seniorName }: { brief: CallLog; seniorName: string }
         )}
       </footer>
 
-      {/* ── Transcript panel ───────────────────────────────────────── */}
       {transcriptOpen && brief.transcript && (
         <div id="transcript-panel" className="px-6 pb-6">
           <div className="bg-dew-bg rounded-lg border border-dew-border p-4 text-sm font-body text-dew-text leading-relaxed whitespace-pre-wrap">
@@ -254,9 +203,24 @@ export default function DailyBrief() {
   const [brief,    setBrief]    = useState<CallLog | null>(null)
   const [loading,  setLoading]  = useState(true)
   const [noSenior, setNoSenior] = useState(false)
+  const [profileName, setProfileName] = useState('')
 
-  const rawName  = (user?.user_metadata?.full_name as string | undefined) ?? ''
-  const firstName = rawName.split(' ')[0] || 'there'
+  // Resolve first name: metadata first, then /api/auth/me, then no name
+  useEffect(() => {
+    const metaName = (user?.user_metadata?.full_name as string | undefined) ?? ''
+    if (metaName) {
+      setProfileName(metaName.split(' ')[0])
+      return
+    }
+    if (user) {
+      api.get<{ full_name?: string }>('/api/auth/me')
+        .then(data => {
+          const name = data.full_name ?? ''
+          if (name) setProfileName(name.split(' ')[0])
+        })
+        .catch(() => {})
+    }
+  }, [user])
 
   const today = new Date().toLocaleDateString(undefined, {
     weekday: 'long', day: 'numeric', month: 'long',
@@ -288,7 +252,7 @@ export default function DailyBrief() {
           const briefData = await api.get<CallLog>(`/api/briefs/${seniorsData[0].id}/today`)
           if (!cancelled) setBrief(briefData)
         } catch {
-          // No brief today — empty state is correct here
+          // No brief today — empty state is correct
         }
       } catch {
         if (!cancelled) setNoSenior(true)
@@ -305,15 +269,13 @@ export default function DailyBrief() {
 
   return (
     <div>
-      {/* ── Page greeting ──────────────────────────────────────────── */}
       <div className="mb-6">
         <h1 className="font-display text-[1.75rem] font-semibold text-dew-text">
-          {greeting}, {firstName}
+          {greeting}{profileName ? `, ${profileName}` : ''}
         </h1>
         <p className="mt-1 font-body text-base text-dew-muted">{today}</p>
       </div>
 
-      {/* ── Hero brief card ────────────────────────────────────────── */}
       {loading ? (
         <BriefSkeleton />
       ) : (noSenior || !brief) ? (
