@@ -1,46 +1,41 @@
 import { useState, useEffect, memo } from 'react'
 import { ChevronDown, ChevronUp, Phone } from 'lucide-react'
 import { api } from '../lib/api'
+import { useSenior } from '../lib/senior'
 import { moodColor, moodEmoji, moodHeadline } from '../lib/mood'
-import { formatCallTime, formatDuration, formatHistoryDate } from '../lib/format'
+import { formatCallDatetime, formatDuration, formatDateLabel, formatMonthLabel } from '../lib/format'
 
 // ── Types ────────────────────────────────────────────────────────────────────
-
-interface Senior {
-  id:   string
-  name: string
-}
 
 interface CallLog {
   id:               string
   senior_id:        string
-  status:           string
-  started_at:       string
-  ended_at:         string | null
+  call_date:        string
+  call_time_utc:    string | null
+  outcome:          string
   duration_seconds: number | null
   brief_text:       string | null
   mood_score:       number | null
   topics_mentioned: string[] | null
   flags_detected:   string[] | null
-  transcript:       string | null
 }
 
-interface BriefGroup {
-  dateLabel: string
-  briefs:    CallLog[]
+interface MonthGroup {
+  monthLabel: string
+  briefs:     CallLog[]
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-function groupBriefsByDate(briefs: CallLog[]): BriefGroup[] {
+function groupBriefsByMonth(briefs: CallLog[]): MonthGroup[] {
   const map = new Map<string, CallLog[]>()
   for (const b of briefs) {
-    const label = formatHistoryDate(b.started_at)
+    const label = formatMonthLabel(b.call_date)
     const group = map.get(label) ?? []
     group.push(b)
     map.set(label, group)
   }
-  return Array.from(map.entries()).map(([dateLabel, briefs]) => ({ dateLabel, briefs }))
+  return Array.from(map.entries()).map(([monthLabel, briefs]) => ({ monthLabel, briefs }))
 }
 
 // ── History card ─────────────────────────────────────────────────────────────
@@ -50,9 +45,9 @@ const HistoryCard = memo(function HistoryCard({ brief, seniorName }: { brief: Ca
 
   const borderColor = moodColor(brief.mood_score)
   const headline    = moodHeadline(brief.mood_score, seniorName)
-  const callTime    = brief.started_at ? formatCallTime(brief.started_at) : ''
+  const callTime    = formatCallDatetime(brief.call_date, brief.call_time_utc)
   const duration    = formatDuration(brief.duration_seconds)
-  const answered    = brief.status === 'completed' ? 'Answered' : 'No answer'
+  const answered    = brief.outcome === 'completed' ? 'Answered' : 'No answer'
   const hasFlags    = !!brief.flags_detected?.length
 
   const lines = (brief.brief_text ?? '').split('\n').map(l => l.trim()).filter(Boolean)
@@ -141,51 +136,47 @@ const HistoryCard = memo(function HistoryCard({ brief, seniorName }: { brief: Ca
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 
+const LIMIT = 20
+
 export default function BriefHistory() {
-  const [senior,   setSenior]   = useState<Senior | null>(null)
-  const [briefs,   setBriefs]   = useState<CallLog[]>([])
-  const [loading,  setLoading]  = useState(true)
+  const { senior, seniorId } = useSenior()
+
+  const [briefs,      setBriefs]      = useState<CallLog[]>([])
+  const [loading,     setLoading]     = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
-  const [hasMore,  setHasMore]  = useState(true)
-  const [offset,   setOffset]   = useState(0)
-  const LIMIT = 20
+  const [hasMore,     setHasMore]     = useState(true)
+  const [page,        setPage]        = useState(1)
 
   useEffect(() => {
+    if (!seniorId) return
+
     let cancelled = false
+    setLoading(true)
 
-    async function load() {
-      try {
-        const seniors = await api.get<Senior[]>('/api/seniors')
-        if (cancelled || !seniors.length) { setLoading(false); return }
+    api.get<{ briefs: CallLog[]; total: number }>(`/api/briefs/${seniorId}?limit=${LIMIT}&page=1`)
+      .then(({ briefs, total }) => {
+        if (cancelled) return
+        setBriefs(briefs)
+        setHasMore(briefs.length < total)
+        setPage(1)
+      })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setLoading(false) })
 
-        const s = seniors[0]
-        setSenior(s)
-
-        const data = await api.get<CallLog[]>(`/api/briefs/${s.id}?limit=${LIMIT}&offset=0`)
-        if (!cancelled) {
-          setBriefs(data)
-          setHasMore(data.length === LIMIT)
-          setOffset(LIMIT)
-        }
-      } catch {
-        // silently show empty state
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-
-    load()
     return () => { cancelled = true }
-  }, [])
+  }, [seniorId])
 
   const loadMore = async () => {
-    if (!senior || loadingMore) return
+    if (!seniorId || loadingMore) return
     setLoadingMore(true)
+    const nextPage = page + 1
     try {
-      const more = await api.get<CallLog[]>(`/api/briefs/${senior.id}?limit=${LIMIT}&offset=${offset}`)
+      const { briefs: more, total } = await api.get<{ briefs: CallLog[]; total: number }>(
+        `/api/briefs/${seniorId}?limit=${LIMIT}&page=${nextPage}`
+      )
       setBriefs(prev => [...prev, ...more])
-      setOffset(prev => prev + LIMIT)
-      setHasMore(more.length === LIMIT)
+      setPage(nextPage)
+      setHasMore(briefs.length + more.length < total)
     } catch {
       // silent
     } finally {
@@ -193,8 +184,8 @@ export default function BriefHistory() {
     }
   }
 
-  const seniorName = senior?.name ?? 'Mum'
-  const groups = groupBriefsByDate(briefs)
+  const seniorName = senior?.preferred_name || senior?.full_name || 'Mum'
+  const groups = groupBriefsByMonth(briefs)
 
   return (
     <div>
@@ -234,15 +225,20 @@ export default function BriefHistory() {
           </p>
         </div>
       ) : (
-        <div className="space-y-6">
-          {groups.map(({ dateLabel, briefs: dayBriefs }) => (
-            <div key={dateLabel}>
-              <p className="text-sm font-body font-medium text-dew-muted mb-3">
-                {dateLabel}
+        <div className="space-y-8">
+          {groups.map(({ monthLabel, briefs: monthBriefs }) => (
+            <div key={monthLabel}>
+              <p className="text-sm font-body font-semibold text-dew-text mb-4">
+                {monthLabel}
               </p>
-              <div className="space-y-3">
-                {dayBriefs.map(brief => (
-                  <HistoryCard key={brief.id} brief={brief} seniorName={seniorName} />
+              <div className="space-y-5">
+                {monthBriefs.map(brief => (
+                  <div key={brief.id}>
+                    <p className="text-xs font-body text-dew-muted mb-2">
+                      {formatDateLabel(brief.call_date)}
+                    </p>
+                    <HistoryCard brief={brief} seniorName={seniorName} />
+                  </div>
                 ))}
               </div>
             </div>

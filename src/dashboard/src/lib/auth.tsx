@@ -1,21 +1,24 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import type { User, Session } from '@supabase/supabase-js'
 import { supabase } from './supabase'
+import { api } from './api'
 
 interface AuthContextType {
-  user:    User | null
-  session: Session | null
-  loading: boolean
-  signIn:  (email: string, password: string) => Promise<void>
-  signOut: () => Promise<void>
+  user:        User | null
+  session:     Session | null
+  loading:     boolean
+  profileName: string | null
+  signIn:      (email: string, password: string) => Promise<void>
+  signOut:     () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user,    setUser]    = useState<User | null>(null)
-  const [session, setSession] = useState<Session | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [user,        setUser]        = useState<User | null>(null)
+  const [session,     setSession]     = useState<Session | null>(null)
+  const [loading,     setLoading]     = useState(true)
+  const [profileName, setProfileName] = useState<string | null>(null)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -32,6 +35,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe()
   }, [])
 
+  // Resolve first name once user is known: metadata → /api/auth/me → null
+  useEffect(() => {
+    if (!user) { setProfileName(null); return }
+
+    const metaName = user.user_metadata?.full_name as string | undefined
+    if (metaName) { setProfileName(metaName.split(' ')[0]); return }
+
+    api.get<{ familyMember: { full_name: string } | null }>('/api/auth/me')
+      .then(({ familyMember }) => {
+        setProfileName(familyMember?.full_name?.split(' ')[0] ?? null)
+      })
+      .catch(() => {})
+  }, [user])
+
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw error
@@ -43,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, profileName, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   )

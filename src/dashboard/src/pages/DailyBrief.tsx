@@ -2,22 +2,18 @@ import { useState, useEffect, memo } from 'react'
 import { ChevronDown, ChevronUp, Phone } from 'lucide-react'
 import { api } from '../lib/api'
 import { useAuth } from '../lib/auth'
+import { useSenior } from '../lib/senior'
 import { moodColor, moodEmoji, moodHeadline } from '../lib/mood'
-import { formatCallTime, formatDuration } from '../lib/format'
+import { formatCallDatetime, formatDuration } from '../lib/format'
 
 // ── Types ────────────────────────────────────────────────────────────────────
-
-interface Senior {
-  id:   string
-  name: string
-}
 
 interface CallLog {
   id:               string
   senior_id:        string
-  status:           string
-  started_at:       string
-  ended_at:         string | null
+  call_date:        string
+  call_time_utc:    string | null
+  outcome:          string
   duration_seconds: number | null
   brief_text:       string | null
   mood_score:       number | null
@@ -72,14 +68,28 @@ function EmptyState() {
   )
 }
 
+function ErrorState() {
+  return (
+    <div className="bg-dew-surface rounded-card shadow-card p-10 text-center">
+      <div className="text-5xl mb-4" role="img" aria-label="Cloud">☁️</div>
+      <h2 className="font-display text-xl font-semibold text-dew-text mb-2">
+        We couldn't load this morning's brief.
+      </h2>
+      <p className="font-body text-base text-dew-muted leading-relaxed max-w-xs mx-auto">
+        It may be on its way — try refreshing in a moment.
+      </p>
+    </div>
+  )
+}
+
 const BriefCard = memo(function BriefCard({ brief, seniorName }: { brief: CallLog; seniorName: string }) {
   const [transcriptOpen, setTranscriptOpen] = useState(false)
 
   const borderColor = moodColor(brief.mood_score)
   const headline    = moodHeadline(brief.mood_score, seniorName)
-  const callTime    = brief.started_at ? formatCallTime(brief.started_at) : ''
+  const callTime    = formatCallDatetime(brief.call_date, brief.call_time_utc)
   const duration    = formatDuration(brief.duration_seconds)
-  const answered    = brief.status === 'completed' ? 'Answered' : 'No answer'
+  const answered    = brief.outcome === 'completed' ? 'Answered' : 'No answer'
 
   const lines = (brief.brief_text ?? '').split('\n').map(l => l.trim()).filter(Boolean)
 
@@ -198,29 +208,12 @@ const BriefCard = memo(function BriefCard({ brief, seniorName }: { brief: CallLo
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function DailyBrief() {
-  const { user }   = useAuth()
-  const [seniors,  setSeniors]  = useState<Senior[]>([])
-  const [brief,    setBrief]    = useState<CallLog | null>(null)
-  const [loading,  setLoading]  = useState(true)
-  const [noSenior, setNoSenior] = useState(false)
-  const [profileName, setProfileName] = useState('')
+  const { profileName }    = useAuth()
+  const { senior, seniorId } = useSenior()
 
-  // Resolve first name: metadata first, then /api/auth/me, then no name
-  useEffect(() => {
-    const metaName = (user?.user_metadata?.full_name as string | undefined) ?? ''
-    if (metaName) {
-      setProfileName(metaName.split(' ')[0])
-      return
-    }
-    if (user) {
-      api.get<{ full_name?: string }>('/api/auth/me')
-        .then(data => {
-          const name = data.full_name ?? ''
-          if (name) setProfileName(name.split(' ')[0])
-        })
-        .catch(() => {})
-    }
-  }, [user])
+  const [brief,   setBrief]   = useState<CallLog | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState(false)
 
   const today = new Date().toLocaleDateString(undefined, {
     weekday: 'long', day: 'numeric', month: 'long',
@@ -228,44 +221,34 @@ export default function DailyBrief() {
 
   const greeting = (() => {
     const h = new Date().getHours()
-    if (h < 12) return 'Good morning'
-    if (h < 17) return 'Good afternoon'
-    return 'Good evening'
+    if (h >= 5  && h < 12) return 'Good morning'
+    if (h >= 12 && h < 17) return 'Good afternoon'
+    if (h >= 17 && h < 21) return 'Good evening'
+    return 'Good night'
   })()
 
   useEffect(() => {
+    if (!seniorId) return
+
     let cancelled = false
+    setLoading(true)
+    setError(false)
 
-    async function load() {
-      try {
-        const seniorsData = await api.get<Senior[]>('/api/seniors')
-        if (cancelled) return
-
-        if (!seniorsData.length) {
-          setNoSenior(true)
-          return
-        }
-
-        setSeniors(seniorsData)
-
-        try {
-          const briefData = await api.get<CallLog>(`/api/briefs/${seniorsData[0].id}/today`)
-          if (!cancelled) setBrief(briefData)
-        } catch {
-          // No brief today — empty state is correct
-        }
-      } catch {
-        if (!cancelled) setNoSenior(true)
-      } finally {
+    api.get<{ brief: CallLog | null }>(`/api/briefs/${seniorId}/today`)
+      .then(({ brief }) => {
+        if (!cancelled) setBrief(brief)
+      })
+      .catch(() => {
+        if (!cancelled) setError(true)
+      })
+      .finally(() => {
         if (!cancelled) setLoading(false)
-      }
-    }
+      })
 
-    load()
     return () => { cancelled = true }
-  }, [])
+  }, [seniorId])
 
-  const seniorName = seniors[0]?.name ?? 'Mum'
+  const seniorName = senior?.preferred_name || senior?.full_name || 'Mum'
 
   return (
     <div>
@@ -278,7 +261,9 @@ export default function DailyBrief() {
 
       {loading ? (
         <BriefSkeleton />
-      ) : (noSenior || !brief) ? (
+      ) : error ? (
+        <ErrorState />
+      ) : !brief ? (
         <EmptyState />
       ) : (
         <BriefCard brief={brief} seniorName={seniorName} />

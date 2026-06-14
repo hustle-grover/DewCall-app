@@ -1,28 +1,12 @@
 import { useState, useEffect } from 'react'
 import { api } from '../lib/api'
+import { useSenior } from '../lib/senior'
+import { useToast } from '../components/Toast'
 import { TIMEZONES } from '../lib/constants'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-interface Senior {
-  id:               string
-  name:             string
-  preferred_name:   string | null
-  phone:            string
-  age:              number | null
-  timezone:         string
-  call_time:        string
-  call_frequency:   string
-  custom_days:      string[] | null
-  companion_name:   string
-  memory_flag:      'normal' | 'caution'
-  hobbies:          string | null
-  personality:      string | null
-  health_context:   string | null
-  cultural_notes:   string | null
-}
-
-type CallFrequency = 'daily' | 'weekdays' | 'every_other' | 'custom'
+type CallFrequency = 'daily' | 'weekdays' | 'every_2_days' | '3x_week' | 'custom'
 type MemoryFlag    = 'normal' | 'caution'
 
 // ── Shared input styles ───────────────────────────────────────────────────────
@@ -55,104 +39,75 @@ function SectionDivider({ title }: { title: string }) {
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ParentProfile() {
-  const [senior,   setSenior]   = useState<Senior | null>(null)
-  const [loading,  setLoading]  = useState(true)
-  const [saving,   setSaving]   = useState(false)
-  const [saved,    setSaved]    = useState(false)
-  const [error,    setError]    = useState('')
+  const { senior, seniorId } = useSenior()
+  const { showToast }        = useToast()
+  const [saving, setSaving]  = useState(false)
 
-  // Form state
-  const [name,             setName]            = useState('')
-  const [preferredName,    setPreferredName]    = useState('')
-  const [phone,            setPhone]           = useState('')
-  const [age,              setAge]             = useState('')
-  const [timezone,         setTimezone]        = useState('America/New_York')
-  const [callTime,         setCallTime]        = useState('09:00')
-  const [callFrequency,    setCallFrequency]   = useState<CallFrequency>('weekdays')
-  const [companionName,    setCompanionName]   = useState('Clara')
-  const [memoryFlag,       setMemoryFlag]      = useState<MemoryFlag>('normal')
-  const [hobbies,          setHobbies]         = useState('')
-  const [personality,      setPersonality]     = useState('')
-  const [healthContext,    setHealthContext]    = useState('')
-  const [culturalNotes,    setCulturalNotes]   = useState('')
+  // Form state — populated once from context senior
+  const [name,          setName]          = useState('')
+  const [preferredName, setPreferredName] = useState('')
+  const [phone,         setPhone]         = useState('')
+  const [age,           setAge]           = useState('')
+  const [timezone,      setTimezone]      = useState('America/New_York')
+  const [callTime,      setCallTime]      = useState('09:00')
+  const [callFrequency, setCallFrequency] = useState<CallFrequency>('weekdays')
+  const [companionName, setCompanionName] = useState('Clara')
+  const [memoryFlag,    setMemoryFlag]    = useState<MemoryFlag>('normal')
+  const [hobbies,       setHobbies]       = useState('')
+  const [personality,   setPersonality]   = useState('')
+  const [healthContext, setHealthContext] = useState('')
+  const [culturalNotes, setCulturalNotes] = useState('')
 
+  // Populate form from context (runs once when senior is available)
   useEffect(() => {
-    let cancelled = false
-
-    async function load() {
-      try {
-        const seniors = await api.get<Senior[]>('/api/seniors')
-        if (cancelled || !seniors.length) { setLoading(false); return }
-
-        const s = seniors[0]
-        setSenior(s)
-
-        setName(s.name)
-        setPreferredName(s.preferred_name ?? '')
-        setPhone(s.phone)
-        setAge(s.age?.toString() ?? '')
-        setTimezone(s.timezone)
-        setCallTime(s.call_time)
-        setCallFrequency(s.call_frequency as CallFrequency)
-        setCompanionName(s.companion_name)
-        setMemoryFlag(s.memory_flag)
-        setHobbies(s.hobbies ?? '')
-        setPersonality(s.personality ?? '')
-        setHealthContext(s.health_context ?? '')
-        setCulturalNotes(s.cultural_notes ?? '')
-      } catch {
-        // show read-only empty state
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-
-    load()
-    return () => { cancelled = true }
-  }, [])
+    if (!senior) return
+    setName(senior.full_name)
+    setPreferredName(senior.preferred_name ?? '')
+    setPhone(senior.phone)
+    setAge(senior.age?.toString() ?? '')
+    setTimezone(senior.timezone)
+    setCallTime(senior.call_time)
+    setCallFrequency(senior.call_frequency as CallFrequency)
+    setCompanionName(senior.companion_name)
+    setMemoryFlag((senior.memory_flag?.toLowerCase() as MemoryFlag) ?? 'normal')
+    setHobbies(senior.hobbies ?? '')
+    setPersonality(senior.personality_notes ?? '')
+    setHealthContext(senior.health_notes ?? '')
+    setCulturalNotes(senior.cultural_notes ?? '')
+  }, [senior])
 
   const handleSave = async () => {
-    if (!senior) return
+    if (!seniorId) return
     setSaving(true)
-    setError('')
-    setSaved(false)
     try {
-      await api.put(`/api/seniors/${senior.id}`, {
-        name,
-        preferred_name:   preferredName || undefined,
-        phone,
-        age:              age ? Number(age) : undefined,
-        timezone,
-        call_time:        callTime,
-        call_frequency:   callFrequency,
-        companion_name:   companionName,
-        memory_flag:      memoryFlag,
-        hobbies:          hobbies || undefined,
-        personality:      personality || undefined,
-        health_context:   healthContext || undefined,
-        cultural_notes:   culturalNotes || undefined,
-      })
-      setSaved(true)
-      setTimeout(() => setSaved(false), 3000)
+      await Promise.all([
+        api.put(`/api/seniors/${seniorId}`, {
+          full_name:         name,
+          preferred_name:    preferredName || undefined,
+          phone,
+          age:               age ? Number(age) : undefined,
+          memory_flag:       memoryFlag.toUpperCase(),
+          hobbies:           hobbies || undefined,
+          personality_notes: personality || undefined,
+          health_notes:      healthContext || undefined,
+          cultural_notes:    culturalNotes || undefined,
+        }),
+        api.put(`/api/seniors/${seniorId}/preferences`, {
+          timezone,
+          call_time:      callTime,
+          call_frequency: callFrequency,
+          companion_name: companionName,
+        }),
+      ])
+      showToast('Changes saved')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not save. Please try again.')
+      showToast(err instanceof Error ? err.message : 'Could not save. Please try again.', 'error')
     } finally {
       setSaving(false)
     }
   }
 
-  const displayName = senior?.preferred_name || senior?.name || 'your parent'
-
-  if (loading) {
-    return (
-      <div className="space-y-6 animate-pulse" aria-hidden="true">
-        <div className="h-8 w-48 bg-dew-border rounded" />
-        <div className="space-y-4">
-          {[1, 2, 3, 4].map(i => <div key={i} className="h-12 bg-dew-border rounded-button" />)}
-        </div>
-      </div>
-    )
-  }
+  const displayName = senior?.preferred_name || senior?.full_name || 'your parent'
 
   return (
     <div>
@@ -161,7 +116,7 @@ export default function ParentProfile() {
           About {displayName}
         </h1>
         <p className="mt-1 font-body text-base text-dew-muted">
-          Help Clara know {displayName} better
+          Help {companionName || 'Clara'} know {displayName} better
         </p>
       </div>
 
@@ -176,7 +131,8 @@ export default function ParentProfile() {
           </div>
           <div>
             <FieldLabel htmlFor="preferredName">What they like to be called</FieldLabel>
-            <input id="preferredName" type="text" value={preferredName} onChange={e => setPreferredName(e.target.value)}
+            <input id="preferredName" type="text" value={preferredName}
+              onChange={e => setPreferredName(e.target.value)}
               className={inputCls} placeholder="e.g. Maggie" />
           </div>
         </div>
@@ -188,8 +144,8 @@ export default function ParentProfile() {
           </div>
           <div>
             <FieldLabel htmlFor="age">Age (optional)</FieldLabel>
-            <input id="age" type="number" min="50" max="120" value={age} onChange={e => setAge(e.target.value)}
-              className={inputCls} placeholder="78" />
+            <input id="age" type="number" min="50" max="120" value={age}
+              onChange={e => setAge(e.target.value)} className={inputCls} placeholder="78" />
           </div>
         </div>
 
@@ -210,7 +166,8 @@ export default function ParentProfile() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <FieldLabel htmlFor="callTime">Call time</FieldLabel>
-            <input id="callTime" type="time" value={callTime} onChange={e => setCallTime(e.target.value)} className={inputCls} />
+            <input id="callTime" type="time" value={callTime}
+              onChange={e => setCallTime(e.target.value)} className={inputCls} />
           </div>
           <div>
             <FieldLabel htmlFor="callFrequency">Frequency</FieldLabel>
@@ -218,7 +175,8 @@ export default function ParentProfile() {
               onChange={e => setCallFrequency(e.target.value as CallFrequency)} className={selectCls}>
               <option value="daily">Every day</option>
               <option value="weekdays">Weekdays only</option>
-              <option value="every_other">Every other day</option>
+              <option value="every_2_days">Every other day</option>
+              <option value="3x_week">Three times a week</option>
               <option value="custom">Custom</option>
             </select>
           </div>
@@ -250,7 +208,7 @@ export default function ParentProfile() {
             ))}
           </div>
           <p className="mt-1.5 text-xs font-body text-dew-muted">
-            Use Caution if memory is a concern — Clara will adjust her conversation style.
+            Use Caution if memory is a concern — {companionName || 'Clara'} will adjust her conversation style.
           </p>
         </div>
       </div>
@@ -272,7 +230,7 @@ export default function ParentProfile() {
             placeholder="Is she chatty or quiet in the mornings? Loves a laugh? Gets anxious easily?" />
         </div>
         <div>
-          <FieldLabel htmlFor="healthContext">Anything Clara should be gentle about</FieldLabel>
+          <FieldLabel htmlFor="healthContext">Anything {companionName || 'Clara'} should be gentle about</FieldLabel>
           <textarea id="healthContext" rows={2} value={healthContext} onChange={e => setHealthContext(e.target.value)}
             className={textareaCls}
             placeholder="Topics to tread gently around, tiring quickly, recent changes…" />
@@ -284,18 +242,6 @@ export default function ParentProfile() {
             placeholder="Any topics to avoid or embrace? Special days to acknowledge?" />
         </div>
       </div>
-
-      {/* ── Error / success ───────────────────────────────────────── */}
-      {error && (
-        <div role="alert" className="mt-6 text-sm text-dew-flag-text bg-dew-flag-bg rounded-lg p-3 font-body">
-          {error}
-        </div>
-      )}
-      {saved && (
-        <div role="status" aria-live="polite" className="mt-6 text-sm text-dew-primary bg-dew-chip-bg rounded-lg p-3 font-body">
-          Changes saved.
-        </div>
-      )}
 
       {/* ── Save ─────────────────────────────────────────────────── */}
       <div className="mt-8 pb-4">

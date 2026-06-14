@@ -4,26 +4,40 @@ import {
   ResponsiveContainer, ReferenceLine,
 } from 'recharts'
 import { api } from '../lib/api'
+import { useSenior } from '../lib/senior'
 import { moodColor, moodEmoji, moodLabel } from '../lib/mood'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-interface Senior {
-  id:   string
-  name: string
+interface MoodDataPoint {
+  call_date:        string
+  mood_score:       number
+  outcome:          string
+  topics_mentioned: string[] | null
+  flags_detected:   string[] | null
 }
 
-interface MoodDataPoint {
-  date:             string
+// Derived shape used by recharts
+interface ChartPoint {
+  call_date:        string
   mood_score:       number
   topics_mentioned: string[]
   has_flags:        boolean
 }
 
+function toChartPoint(d: MoodDataPoint): ChartPoint {
+  return {
+    call_date:        d.call_date,
+    mood_score:       d.mood_score,
+    topics_mentioned: d.topics_mentioned ?? [],
+    has_flags:        (d.flags_detected?.length ?? 0) > 0,
+  }
+}
+
 // ── Recharts custom elements ─────────────────────────────────────────────────
 
 function CustomDot(props: Record<string, unknown>) {
-  const { cx, cy, payload } = props as { cx: number; cy: number; payload: MoodDataPoint }
+  const { cx, cy, payload } = props as { cx: number; cy: number; payload: ChartPoint }
   const color = moodColor(payload.mood_score)
   return (
     <g key={`dot-${cx}-${cy}`}>
@@ -35,13 +49,13 @@ function CustomDot(props: Record<string, unknown>) {
   )
 }
 
-function CustomTooltip({ active, payload }: { active?: boolean; payload?: { payload: MoodDataPoint }[] }) {
+function CustomTooltip({ active, payload }: { active?: boolean; payload?: { payload: ChartPoint }[] }) {
   if (!active || !payload?.length) return null
   const d = payload[0].payload
   return (
     <div className="bg-dew-surface rounded-lg shadow-card px-3 py-2 text-sm font-body border border-dew-border">
       <p className="text-dew-muted text-xs mb-0.5">
-        {new Date(d.date).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' })}
+        {new Date(`${d.call_date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' })}
       </p>
       <p className="text-dew-text font-medium">
         {moodEmoji(d.mood_score)} {moodLabel(d.mood_score)}
@@ -66,15 +80,15 @@ function StatCard({ label, children }: { label: string; children: React.ReactNod
 
 // ── Memoized chart ───────────────────────────────────────────────────────────
 
-const MoodChart = memo(function MoodChart({ data }: { data: MoodDataPoint[] }) {
+const MoodChart = memo(function MoodChart({ data }: { data: ChartPoint[] }) {
   return (
     <ResponsiveContainer width="100%" height={220}>
       <LineChart data={data} margin={{ top: 12, right: 8, left: -28, bottom: 0 }}>
         <ReferenceLine y={3} stroke="#EDE8E0" strokeDasharray="0" />
         <XAxis
-          dataKey="date"
+          dataKey="call_date"
           tickFormatter={(d: string) =>
-            new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+            new Date(`${d}T12:00:00`).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
           }
           tick={{ fontSize: 11, fill: '#717171', fontFamily: 'Inter, system-ui, sans-serif' }}
           interval={6}
@@ -109,35 +123,28 @@ const MoodChart = memo(function MoodChart({ data }: { data: MoodDataPoint[] }) {
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function MoodTrends() {
-  const [senior,  setSenior]  = useState<Senior | null>(null)
-  const [data,    setData]    = useState<MoodDataPoint[]>([])
+  const { senior, seniorId } = useSenior()
+
+  const [data,    setData]    = useState<ChartPoint[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!seniorId) return
+
     let cancelled = false
+    setLoading(true)
 
-    async function load() {
-      try {
-        const seniors = await api.get<Senior[]>('/api/seniors')
-        if (cancelled || !seniors.length) { setLoading(false); return }
+    api.get<{ moodData: MoodDataPoint[] }>(`/api/briefs/${seniorId}/mood`)
+      .then(({ moodData }) => {
+        if (!cancelled) setData(moodData.map(toChartPoint))
+      })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setLoading(false) })
 
-        const s = seniors[0]
-        setSenior(s)
-
-        const mood = await api.get<MoodDataPoint[]>(`/api/briefs/${s.id}/mood`)
-        if (!cancelled) setData(mood)
-      } catch {
-        // show empty state
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-
-    load()
     return () => { cancelled = true }
-  }, [])
+  }, [seniorId])
 
-  const seniorName = senior?.name ?? 'Mum'
+  const seniorName = senior?.preferred_name || senior?.full_name || 'Mum'
 
   // ── Computed stats ────────────────────────────────────────────────────────
 
@@ -145,7 +152,7 @@ export default function MoodTrends() {
   const weekAgo = new Date(now)
   weekAgo.setDate(now.getDate() - 7)
 
-  const thisWeekData = data.filter(d => new Date(d.date) >= weekAgo)
+  const thisWeekData = data.filter(d => new Date(`${d.call_date}T12:00:00`) >= weekAgo)
   const weekAvg = thisWeekData.length
     ? thisWeekData.reduce((s, d) => s + d.mood_score, 0) / thisWeekData.length
     : null
@@ -162,7 +169,7 @@ export default function MoodTrends() {
 
   const topicCounts: Record<string, number> = {}
   for (const d of data) {
-    for (const t of (d.topics_mentioned ?? [])) {
+    for (const t of d.topics_mentioned) {
       topicCounts[t] = (topicCounts[t] ?? 0) + 1
     }
   }
@@ -253,7 +260,7 @@ export default function MoodTrends() {
           {bestDay ? (
             <p className="font-body text-base text-dew-text">
               <span className="mr-1">{moodEmoji(bestDay.mood_score)}</span>
-              {new Date(bestDay.date).toLocaleDateString(undefined, { weekday: 'long' })}
+              {new Date(`${bestDay.call_date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'long' })}
             </p>
           ) : (
             <p className="font-body text-sm text-dew-muted">—</p>
