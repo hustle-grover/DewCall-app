@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
+import { useSenior } from '../lib/senior'
 import { api } from '../lib/api'
 import DeliveryChannelPicker from '../components/DeliveryChannelPicker'
 import { TIMEZONES, DAYS, CHANNEL_LABEL, FREQUENCY_LABEL, type DeliveryChannel } from '../lib/constants'
@@ -54,7 +55,8 @@ function FieldLabel({ htmlFor, children }: { htmlFor: string; children: React.Re
 
 export default function Onboarding() {
   const { user, loading: authLoading } = useAuth()
-  const navigate = useNavigate()
+  const { refreshSenior }              = useSenior()
+  const navigate                       = useNavigate()
 
   const [step,         setStep]         = useState(0)
   const [submitting,   setSubmitting]   = useState(false)
@@ -176,6 +178,7 @@ export default function Onboarding() {
         )
       }
       await api.post('/api/onboarding/complete', {})
+      await refreshSenior()
       navigate('/')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')

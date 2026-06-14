@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
 import { api } from './api'
 import { useAuth } from './auth'
 
@@ -20,10 +20,11 @@ export interface Senior {
 }
 
 interface SeniorContextType {
-  senior:   Senior | null
-  seniorId: string | null
-  loading:  boolean
-  noSenior: boolean
+  senior:         Senior | null
+  seniorId:       string | null
+  loading:        boolean
+  noSenior:       boolean
+  refreshSenior:  () => Promise<void>
 }
 
 const SeniorContext = createContext<SeniorContextType | null>(null)
@@ -34,38 +35,41 @@ export function SeniorProvider({ children }: { children: ReactNode }) {
   const [loading,  setLoading]  = useState(false)
   const [noSenior, setNoSenior] = useState(false)
 
+  const fetchSeniors = useCallback(async () => {
+    if (!user) return
+    setLoading(true)
+    try {
+      const { seniors } = await api.get<{ seniors: Senior[] }>('/api/seniors')
+      if (seniors.length) {
+        setSenior(seniors[0])
+        setNoSenior(false)
+      } else {
+        setNoSenior(true)
+      }
+    } catch {
+      // Network error — don't redirect, just leave senior as null
+    } finally {
+      setLoading(false)
+    }
+  }, [user])
+
   useEffect(() => {
     if (!user) {
       setSenior(null)
       setNoSenior(false)
       return
     }
-
-    setLoading(true)
-    let cancelled = false
-
-    api.get<{ seniors: Senior[] }>('/api/seniors')
-      .then(({ seniors }) => {
-        if (cancelled) return
-        if (seniors.length) {
-          setSenior(seniors[0])
-          setNoSenior(false)
-        } else {
-          setNoSenior(true)
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setSenior(null)
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-
-    return () => { cancelled = true }
-  }, [user])
+    fetchSeniors()
+  }, [user, fetchSeniors])
 
   return (
-    <SeniorContext.Provider value={{ senior, seniorId: senior?.id ?? null, loading, noSenior }}>
+    <SeniorContext.Provider value={{
+      senior,
+      seniorId: senior?.id ?? null,
+      loading,
+      noSenior,
+      refreshSenior: fetchSeniors,
+    }}>
       {children}
     </SeniorContext.Provider>
   )
