@@ -1,0 +1,422 @@
+<!DOCTYPE html><html class="scroll-smooth" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>DewCall | We call your parent every morning</title>
+<!-- Meta Tags -->
+<meta content="A warm daily phone call for your elderly parent. A plain-English summary for you — every morning, before 10am." name="description">
+<meta content="DewCall | Daily Care Calls for Seniors" property="og:title">
+<meta content="We call your parent every morning so you know they're okay. Get a daily morning brief sent straight to your phone." property="og:description">
+<meta content="website" property="og:type">
+<meta content="https://dewcall.app" property="og:url">
+<link href="favicon.png" rel="icon" type="image/png">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-fixed": "#ffdcc6",
+                    "surface-container-high": "#eae7e7",
+                    "background": "#fcf9f8",
+                    "outline-variant": "#c0c8c4",
+                    "on-secondary-fixed-variant": "#693c19",
+                    "on-secondary": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-variant": "#e4e2e1",
+                    "on-tertiary-fixed": "#1c1c1a",
+                    "surface-container": "#f0eded",
+                    "tertiary-container": "#747370",
+                    "error": "#ba1a1a",
+                    "surface-container-low": "#f6f3f2",
+                    "primary-fixed": "#b8edde",
+                    "primary-fixed-dim": "#9dd1c2",
+                    "on-secondary-container": "#794925",
+                    "tertiary-fixed": "#e5e2de",
+                    "error-container": "#ffdad6",
+                    "on-primary-container": "#e7fff6",
+                    "secondary": "#85532e",
+                    "on-background": "#1b1c1c",
+                    "on-surface": "#1b1c1c",
+                    "primary": "#316357",
+                    "on-secondary-fixed": "#301400",
+                    "inverse-surface": "#303030",
+                    "on-error": "#ffffff",
+                    "secondary-container": "#febb8e",
+                    "secondary-fixed-dim": "#fbb88b",
+                    "primary-container": "#4a7c6f",
+                    "on-primary-fixed": "#00201a",
+                    "inverse-primary": "#9dd1c2",
+                    "on-error-container": "#93000a",
+                    "on-primary-fixed-variant": "#1b4f44",
+                    "surface-tint": "#35675b",
+                    "outline": "#707975",
+                    "surface": "#fcf9f8",
+                    "inverse-on-surface": "#f3f0f0",
+                    "on-tertiary-fixed-variant": "#474744",
+                    "surface-container-highest": "#e4e2e1",
+                    "tertiary": "#5b5b58",
+                    "on-tertiary": "#ffffff",
+                    "tertiary-fixed-dim": "#c8c6c2",
+                    "on-surface-variant": "#404946",
+                    "on-primary": "#ffffff",
+                    "surface-bright": "#fcf9f8",
+                    "on-tertiary-container": "#fdfaf6",
+                    "surface-dim": "#dcd9d9"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "margin-mobile": "20px",
+                    "margin-desktop": "40px",
+                    "gutter": "24px",
+                    "stack-lg": "48px",
+                    "unit": "8px",
+                    "stack-md": "24px",
+                    "container-max": "1200px",
+                    "stack-sm": "12px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Playfair Display"],
+                    "label-md": ["Inter"],
+                    "body-md": ["Inter"],
+                    "display-lg-mobile": ["Playfair Display"],
+                    "headline-lg": ["Playfair Display"],
+                    "body-lg": ["Inter"],
+                    "caption": ["Inter"],
+                    "display-lg": ["Playfair Display"]
+            },
+            "fontSize": {
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "label-md": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                    "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "display-lg-mobile": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "caption": ["12px", {"lineHeight": "1.4", "fontWeight": "400"}],
+                    "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        display: inline-block;
+        vertical-align: middle;
+      }
+      .care-note {
+        background-color: rgba(254, 187, 142, 0.1);
+        border-left: 4px solid #febb8e;
+      }
+      .soft-shadow {
+        box-shadow: 0 10px 30px -10px rgba(49, 99, 87, 0.08);
+      }
+      .sms-bubble-user {
+        background-color: #316357;
+        color: white;
+        border-radius: 18px 18px 4px 18px;
+      }
+      .sms-bubble-parent {
+        background-color: #f0eded;
+        color: #1b1c1c;
+        border-radius: 18px 18px 18px 4px;
+      }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- TopNavBar -->
+<nav class="bg-background dark:bg-background flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-unit max-w-container-max mx-auto sticky top-0 z-50">
+<div class="flex items-center gap-2.5">
+<img alt="DewCall logo" class="w-8 h-8 rounded-full" src="favicon.png"/>
+<span class="text-headline-md font-headline-md text-primary dark:text-primary-fixed-dim">DewCall</span>
+</div>
+<div class="hidden md:flex gap-stack-md items-center">
+<a class="font-label-md text-label-md text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-200" href="#how-it-works">How it works</a>
+<a class="font-label-md text-label-md text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-200" href="#pricing">Pricing</a>
+<a class="bg-primary text-on-primary px-5 py-2.5 rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity" href="#pricing">Claim Founding Family Rate</a>
+</div>
+<div class="md:hidden">
+<span class="material-symbols-outlined text-primary">menu</span>
+</div>
+</nav>
+<!-- Hero Section -->
+<section class="relative px-margin-mobile md:px-margin-desktop py-stack-lg max-w-container-max mx-auto overflow-hidden">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-stack-lg items-center">
+<div class="z-10 text-center lg:text-left">
+<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-on-background mb-stack-sm">
+                    We call your parent every morning so you know they're okay.
+                </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-stack-md max-w-xl mx-auto lg:mx-0">
+                    A warm daily phone call for your elderly parent. A plain-English summary for you every morning, before 10am.
+                </p>
+<div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-stack-sm">
+<a class="bg-primary-container text-on-primary-container px-8 py-4 rounded-full font-label-md text-label-md text-center hover:opacity-90 transition-opacity" href="#pricing">
+                        Claim Founding Family Rate →
+                    </a>
+<a class="border border-primary text-primary px-8 py-4 rounded-full font-label-md text-label-md text-center hover:bg-primary-fixed transition-colors" href="#email-section">
+                        Get notified at launch
+                    </a>
+</div>
+<p class="font-caption text-caption text-on-surface-variant opacity-70">
+                    First call within 48 hours · 7 days free · $25/month locked in forever
+                </p>
+</div>
+<div class="relative flex justify-center items-center">
+<div class="w-full aspect-square max-w-md bg-secondary-fixed rounded-full overflow-hidden soft-shadow relative">
+<img alt="Elderly parent laughing while talking on a telephone" class="w-full h-full object-cover opacity-100" data-alt="A heart-warming, high-quality portrait of an elderly woman with silver hair laughing joyfully while holding a traditional beige telephone receiver to her ear. She is sitting in a cozy, sun-drenched living room with soft, warm lighting that emphasizes a sense of peace and connection. The background is slightly blurred, showing a hints of a family home with indoor plants and warm wooden textures. The aesthetic is organic, modern, and focuses on human emotion and trustworthiness." src="hero-photo.jpg">
+<div class="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent"></div>
+</div>
+<!-- Float elements for visual interest -->
+<div class="absolute -bottom-4 -left-4 bg-white p-4 rounded-xl soft-shadow hidden md:block">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: &quot;FILL&quot; 1;">call</span>
+<div>
+<p class="font-label-md text-label-md">Daily Call</p>
+<p class="font-caption text-caption text-on-surface-variant">9:15 AM</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- How It Works -->
+<section class="bg-surface-container-low py-stack-lg" id="how-it-works">
+<div class="px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<h2 class="font-headline-lg text-headline-lg text-center mb-stack-lg">Three things happen every morning</h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<!-- Card 1 -->
+<div class="bg-surface-container-lowest p-stack-md rounded-xl soft-shadow hover:-translate-y-1 transition-transform">
+<div class="text-4xl mb-stack-sm">📞</div>
+<h3 class="font-headline-md text-headline-md mb-2">Clara calls your parent</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">A warm voice calls at the time you choose. They just answer the phone — no apps, no tech.</p>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-container-lowest p-stack-md rounded-xl soft-shadow hover:-translate-y-1 transition-transform">
+<div class="text-4xl mb-stack-sm">💬</div>
+<h3 class="font-headline-md text-headline-md mb-2">They have a real conversation</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">2-3 minutes of genuine chat. Clara remembers everything from past calls.</p>
+</div>
+<!-- Card 3 -->
+<div class="bg-surface-container-lowest p-stack-md rounded-xl soft-shadow hover:-translate-y-1 transition-transform">
+<div class="text-4xl mb-stack-sm">📱</div>
+<h3 class="font-headline-md text-headline-md mb-2">You get a morning brief</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">A plain-English summary in your messages before 10am.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Sample Brief -->
+<section class="py-stack-lg px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-stack-lg items-center">
+<div>
+<h2 class="font-headline-lg text-headline-lg mb-2">What you actually receive</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-stack-md">A text that feels like a sibling sent it</p>
+<div class="care-note p-stack-md rounded-lg mb-stack-md">
+<h4 class="font-headline-md text-headline-md text-secondary-container mb-2">Daily Insight</h4>
+<p class="font-body-md text-body-md italic text-on-surface">"She sounded much brighter today. She finally got that walk in she's been mentioning since Tuesday."</p>
+</div>
+</div>
+<div class="bg-surface-container-high p-8 rounded-[40px] max-w-sm mx-auto w-full border-8 border-inverse-surface shadow-2xl overflow-hidden">
+<div class="flex flex-col gap-4">
+<div class="flex justify-center mb-2">
+<span class="text-[10px] uppercase tracking-widest text-on-surface-variant opacity-50">Today 9:45 AM</span>
+</div>
+<div class="sms-bubble-parent p-4 max-w-[85%] self-start text-sm">
+                        Good morning Sarah! Here's Mum's update from our 9:15 call.
+                    </div>
+<div class="sms-bubble-parent p-4 max-w-[85%] self-start text-sm">
+                        She's doing well! She mentionted her knee felt "a bit creaky" because of the rain, but she's already had her tea and is planning to finish her crossword before lunch.
+                    </div>
+<div class="sms-bubble-parent p-4 max-w-[85%] self-start text-sm">
+                        She sounded a lot more energetic than yesterday. No help needed today. ❤️
+                    </div>
+<div class="sms-bubble-user p-4 max-w-[85%] self-end text-sm">
+                        Thanks Clara! That's so good to hear.
+                    </div>
+</div>
+</div>
+</div>
+</section>
+<!-- Who It's For -->
+<section class="bg-background py-stack-lg border-t border-outline-variant">
+<div class="px-margin-mobile md:px-margin-desktop max-w-4xl mx-auto">
+<h2 class="font-headline-lg text-headline-lg text-center mb-stack-lg">Is DewCall right for your family?</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<div class="bg-primary-container/5 p-stack-md rounded-xl border border-primary/10">
+<h3 class="font-headline-md text-headline-md text-primary mb-4">Perfect if...</h3>
+<ul class="space-y-4">
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary pt-1">check_circle</span>
+<span class="font-body-md text-body-md">You worry about them being "okay" but don't want to nag them with a "just checking" call every single morning.</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary pt-1">check_circle</span>
+<span class="font-body-md text-body-md">Your parent lives alone and doesn't use "apps" or smartphones easily.</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary pt-1">check_circle</span>
+<span class="font-body-md text-body-md">You want a consistent, non-clinical way to track their mood and health over time.</span>
+</li>
+</ul>
+</div>
+<div class="bg-error-container/5 p-stack-md rounded-xl border border-error/10">
+<h3 class="font-headline-md text-headline-md text-error mb-4">Not right if...</h3>
+<ul class="space-y-4">
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-error pt-1">cancel</span>
+<span class="font-body-md text-body-md">Your parent finds phone conversations difficult to follow.</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-error pt-1">cancel</span>
+<span class="font-body-md text-body-md">You're looking for a medical emergency response system (we are not 911).</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-error pt-1">cancel</span>
+<span class="font-body-md text-body-md">Your parent explicitly refuses to speak with anyone on the phone.</span>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+<!-- Founding Family Offer -->
+<section class="px-margin-mobile md:px-margin-desktop py-stack-lg" id="pricing">
+<div class="bg-primary rounded-[2rem] p-stack-lg text-on-primary text-center max-w-4xl mx-auto relative overflow-hidden">
+<div class="relative z-10">
+<div class="inline-block bg-secondary-container text-on-secondary-container px-4 py-1 rounded-full font-label-md text-label-md mb-stack-sm">
+                    Limited Opportunity
+                </div>
+<h2 class="font-headline-lg text-headline-lg mb-stack-sm">50 Founding Families. $25/month. Locked in forever.</h2>
+<p class="font-body-lg text-body-lg mb-stack-md opacity-90 max-w-2xl mx-auto">
+                    Join now and pay $25/month forever — even when we raise prices. First call within 48 hours. 7 days free. Cancel anytime.
+                </p>
+<div class="mb-stack-md">
+<div class="w-full max-w-xs mx-auto bg-primary-container h-3 rounded-full mb-2">
+<div class="bg-secondary-container h-full rounded-full" style="width: 94%;"></div>
+</div>
+<!-- TODO: Update manually as spots fill. Bar width % = (50 - remaining) / 50 * 100 -->
+<p class="font-label-md text-label-md text-secondary-container">47 of 50 spots remaining</p>
+</div>
+<!-- TODO: replace with real Stripe payment link -->
+<a class="inline-block bg-white text-primary px-10 py-5 rounded-full font-headline-md text-headline-md hover:scale-105 transition-transform" href="https://buy.stripe.com/test_PLACEHOLDER">
+                    Claim Your Spot →
+</a>
+</div>
+<!-- Decorative background element -->
+<div class="absolute top-0 right-0 w-64 h-64 bg-primary-container rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl opacity-30"></div>
+</div>
+</section>
+<!-- Email Capture -->
+<section class="py-stack-lg bg-surface-container-low text-center" id="email-section">
+<div class="px-margin-mobile md:px-margin-desktop max-w-xl mx-auto">
+<h2 class="font-headline-md text-headline-md mb-stack-sm">Not ready yet? That's okay.</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-stack-md">We'll send you a short note when we expand our daily call slots.</p>
+<form class="flex flex-col sm:flex-row gap-3" id="email-form">
+<input class="flex-grow rounded-full px-6 py-4 bg-background border-outline focus:border-primary focus:ring-1 focus:ring-primary outline-none text-on-surface" name="email" placeholder="Your email address" required="" type="email">
+<button class="bg-primary text-on-primary px-8 py-4 rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity whitespace-nowrap" type="submit">
+                    Keep me posted
+                </button>
+</form>
+<div class="hidden mt-4 text-primary font-body-md animate-bounce" id="success-msg">
+                Got it! We'll be in touch 💛
+            </div>
+</div>
+</section>
+<!-- Footer -->
+<footer class="w-full px-margin-mobile md:px-margin-desktop py-stack-lg max-w-container-max mx-auto border-t border-outline-variant">
+<div class="flex flex-col md:flex-row justify-between items-start gap-stack-md">
+<div>
+<div class="flex items-center gap-2 mb-2">
+<img alt="DewCall logo" class="w-6 h-6 rounded-full" src="favicon.png"/>
+<span class="text-headline-md font-headline-md text-primary dark:text-primary-fixed-dim">DewCall</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-xs">
+                    Keeping families connected through simple daily care.
+                </p>
+</div>
+<div class="grid grid-cols-2 gap-stack-lg">
+<div class="flex flex-col gap-2">
+<h4 class="font-label-md text-label-md font-bold mb-2">Product</h4>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary underline transition-all" href="#how-it-works">How it works</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary underline transition-all" href="#pricing">Pricing</a>
+</div>
+<div class="flex flex-col gap-2">
+<h4 class="font-label-md text-label-md font-bold mb-2">Support</h4>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary underline transition-all" href="mailto:hello@dewcall.app">Contact Us</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary underline transition-all" href="#">Privacy Policy</a>
+</div>
+</div>
+</div>
+<div class="mt-stack-lg pt-stack-md border-t border-outline-variant/30 flex flex-col md:flex-row justify-between items-center gap-4">
+<p class="font-caption text-caption text-on-surface-variant opacity-70">
+                © 2026 DewCall. All rights reserved.
+            </p>
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-on-surface-variant opacity-50">favorite</span>
+<span class="font-caption text-caption text-on-surface-variant opacity-50 italic">Designed for peace of mind.</span>
+</div>
+</div>
+</footer>
+<script>
+        document.getElementById('email-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const form = this;
+            const successMsg = document.getElementById('success-msg');
+            const formData = new FormData(form);
+            const email = formData.get('email');
+
+            const SUPABASE_URL = 'https://taosqjlywtybeejfhxrl.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRhb3Nxamx5d3R5YmVlamZoeHJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzODU2OTcsImV4cCI6MjA5NTk2MTY5N30.Lu5bd8bax5sLVmu3z_Ssx9MKY5EnVhlCzl_nAnyZACo';
+
+            fetch(`${SUPABASE_URL}/rest/v1/landing_page_signups`, {
+                method: 'POST',
+                headers: {
+                    'apikey': SUPABASE_ANON_KEY,
+                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=minimal'
+                },
+                body: JSON.stringify({ email: email, source: 'landing_page' })
+            }).then(response => {
+                if (response.ok) {
+                    form.style.display = 'none';
+                    successMsg.classList.remove('hidden');
+                } else {
+                    console.error('Signup failed with status:', response.status);
+                    form.style.display = 'none';
+                    successMsg.classList.remove('hidden');
+                }
+            }).catch(error => {
+                console.error('Error:', error);
+                form.style.display = 'none';
+                successMsg.classList.remove('hidden');
+            });
+        });
+
+        // Simple smooth scroll logic for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                const targetId = this.getAttribute('href');
+                if (targetId === '#') return;
+                
+                e.preventDefault();
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+    </script>
+
+
+</body></html>
