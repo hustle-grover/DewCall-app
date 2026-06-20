@@ -1,0 +1,75 @@
+<!DOCTYPE html><html class="scroll-smooth" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Contact Us | DewCall</title>
+<meta content="Get in touch with the DewCall team." name="description">
+<link href="favicon.png" rel="icon" type="image/png">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              background: "#FDFAF6",
+              primary: "#4A7C6F",
+              accent: "#E8956D",
+              ink: "#2C2C2C",
+              muted: "#6B7280"
+            },
+            fontFamily: {
+              headline: ["Playfair Display", "serif"],
+              body: ["Inter", "sans-serif"]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+  body { background-color: #FDFAF6; }
+  h1, h2 { font-family: 'Playfair Display', serif; }
+  body, p, li { font-family: 'Inter', sans-serif; }
+</style>
+</head>
+<body class="text-ink">
+
+<nav class="bg-background flex justify-between items-center w-full px-6 md:px-16 py-5 max-w-5xl mx-auto sticky top-0 z-50 border-b border-gray-100">
+<a href="/" class="flex items-center gap-2.5">
+<img alt="DewCall logo" class="w-8 h-8 rounded-full" src="favicon.png"/>
+<span class="text-xl font-semibold text-primary">DewCall</span>
+</a>
+<a href="/" class="text-sm text-muted hover:text-primary transition-colors">← Back to home</a>
+</nav>
+
+<main class="max-w-3xl mx-auto px-6 md:px-0 py-16">
+
+<h1 class="text-4xl md:text-5xl font-bold mb-3">Get in touch</h1>
+<p class="text-muted mb-12">Questions about DewCall? We'd love to hear from you.</p>
+
+<div class="space-y-6 text-base leading-relaxed">
+
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm px-8 py-8">
+    <p class="text-muted text-sm font-medium uppercase tracking-wide mb-2">Email address</p>
+    <p class="text-2xl font-semibold text-ink select-all">hello@dewcall.app</p>
+    <p class="mt-6 text-muted text-sm">
+      Copy the address above, or —
+      <a href="mailto:hello@dewcall.app" class="text-primary underline hover:opacity-80 transition-opacity">
+        click here to open your email app →
+      </a>
+    </p>
+  </div>
+
+  <p class="text-muted text-sm">
+    We're a small team and aim to reply within one business day.
+  </p>
+
+</div>
+</main>
+
+<footer class="border-t border-gray-100 py-10 mt-10">
+<div class="max-w-3xl mx-auto px-6 md:px-0 text-sm text-muted">
+© 2026 DewCall, a product of Massive Impact Media Pvt. Ltd. All rights reserved.
+</div>
+</footer>
+
+</body></html>
