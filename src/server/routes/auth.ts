@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { supabaseAnon } from '../db/supabase';
 import { requireAuth } from '../middleware/auth';
 import { logger } from '../utils/logger';
+import { verifyOnboardingToken } from '../utils/onboarding-token';
 
 const router = Router();
 
@@ -45,6 +46,23 @@ router.post('/login', async (req: Request, res: Response) => {
 router.post('/logout', requireAuth, async (req: Request, res: Response) => {
   await req.supabase.auth.signOut();
   res.json({ ok: true });
+});
+
+// GET /api/auth/onboarding-token?token=xxx
+// Validates a welcome-email token and returns the pre-filled email.
+// Unauthenticated — called from the signup page before the user has an account.
+router.get('/onboarding-token', (req: Request, res: Response) => {
+  const token = req.query['token'] as string | undefined;
+  if (!token) {
+    res.status(400).json({ error: 'token is required' });
+    return;
+  }
+  const data = verifyOnboardingToken(token);
+  if (!data) {
+    res.status(400).json({ error: 'Invalid or expired link. Please contact hello@dewcall.app.' });
+    return;
+  }
+  res.json({ email: data.email, family_member_id: data.fmid });
 });
 
 // GET /api/auth/me — current user + family member profile (null if onboarding not yet done)

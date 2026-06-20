@@ -164,8 +164,8 @@ export async function deliverBrief(callLogId: string): Promise<void> {
       }
     }
 
-    if (shouldSendWhatsapp && (member.whatsapp_number ?? member.phone)) {
-      const waNumber = member.whatsapp_number ?? member.phone;
+    const waNumber = member.whatsapp_number ?? member.phone;
+    if (shouldSendWhatsapp && waNumber) {
       try {
         await sendWhatsapp(waNumber, briefText);
         successfulChannels.push('whatsapp');

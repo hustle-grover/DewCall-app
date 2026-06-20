@@ -1,14 +1,40 @@
-import { useState, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useState, useEffect, type FormEvent } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
+const BASE_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? ''
+
 export default function Signup() {
-  const navigate   = useNavigate()
-  const [fullName, setFullName] = useState('')
-  const [email,    setEmail]    = useState('')
-  const [password, setPassword] = useState('')
-  const [error,    setError]    = useState('')
-  const [loading,  setLoading]  = useState(false)
+  const navigate      = useNavigate()
+  const [params]      = useSearchParams()
+  const token         = params.get('token')
+
+  const [fullName,  setFullName]  = useState('')
+  const [email,     setEmail]     = useState('')
+  const [password,  setPassword]  = useState('')
+  const [error,     setError]     = useState('')
+  const [loading,   setLoading]   = useState(false)
+
+  // Whether the email came from a paid-subscriber welcome link
+  const [tokenEmail, setTokenEmail] = useState<string | null>(null)
+  const [tokenError, setTokenError] = useState('')
+
+  // Validate the ?token= and pre-fill email if present
+  useEffect(() => {
+    if (!token) return
+
+    fetch(`${BASE_URL}/api/auth/onboarding-token?token=${encodeURIComponent(token)}`)
+      .then(r => r.json())
+      .then((data: { email?: string; error?: string }) => {
+        if (data.email) {
+          setTokenEmail(data.email)
+          setEmail(data.email)
+        } else {
+          setTokenError(data.error ?? 'This link is invalid or has expired.')
+        }
+      })
+      .catch(() => setTokenError('Could not validate your link. Please try again or contact hello@dewcall.app.'))
+  }, [token])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -38,12 +64,23 @@ export default function Signup() {
             Dewcall
           </p>
           <h1 className="font-display text-[2rem] font-semibold text-dew-text leading-snug">
-            Let's get started
+            {tokenEmail ? 'Create your account' : 'Let\'s get started'}
           </h1>
           <p className="mt-2 font-body text-base text-dew-muted">
-            Set up your parent's morning calls in minutes.
+            {tokenEmail
+              ? 'Choose a password to finish setting up your account.'
+              : 'Set up your parent\'s morning calls in minutes.'}
           </p>
         </div>
+
+        {tokenError && (
+          <div
+            role="alert"
+            className="mb-4 text-sm font-body text-dew-flag-text bg-dew-flag-bg rounded-lg p-3"
+          >
+            {tokenError}
+          </div>
+        )}
 
         <form
           onSubmit={handleSubmit}
@@ -85,10 +122,20 @@ export default function Signup() {
               required
               autoComplete="email"
               value={email}
-              onChange={e => setEmail(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-button border border-dew-border bg-dew-bg text-dew-text placeholder:text-dew-muted text-base focus:outline-none focus:border-dew-primary focus-visible:ring-2 focus-visible:ring-dew-primary focus-visible:ring-offset-1 transition-colors"
+              onChange={e => !tokenEmail && setEmail(e.target.value)}
+              readOnly={!!tokenEmail}
+              className={`w-full px-4 py-2.5 rounded-button border border-dew-border text-dew-text text-base focus:outline-none transition-colors ${
+                tokenEmail
+                  ? 'bg-dew-chip-bg text-dew-muted cursor-default'
+                  : 'bg-dew-bg placeholder:text-dew-muted focus:border-dew-primary focus-visible:ring-2 focus-visible:ring-dew-primary focus-visible:ring-offset-1'
+              }`}
               placeholder="you@example.com"
             />
+            {tokenEmail && (
+              <p className="mt-1 text-xs font-body text-dew-muted">
+                This is the email address tied to your subscription.
+              </p>
+            )}
           </div>
 
           <div>

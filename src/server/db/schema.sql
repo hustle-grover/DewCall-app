@@ -19,14 +19,15 @@
 CREATE TABLE IF NOT EXISTS family_members (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   auth_user_id UUID REFERENCES auth.users(id),
-  full_name TEXT NOT NULL,
+  full_name TEXT,                     -- nullable: webhook creates row before onboarding fills this
   email TEXT NOT NULL UNIQUE,
-  phone TEXT NOT NULL,
+  phone TEXT,                         -- nullable: same reason
   whatsapp_number TEXT,
   preferred_brief_channel TEXT NOT NULL DEFAULT 'sms'
     CHECK (preferred_brief_channel IN ('sms', 'whatsapp', 'email', 'all')),
   stripe_customer_id TEXT,
   stripe_subscription_id TEXT,
+  razorpay_subscription_id TEXT,      -- active payment provider
   subscription_status TEXT DEFAULT 'trial'
     CHECK (subscription_status IN ('trial', 'active', 'past_due', 'cancelled')),
   trial_ends_at TIMESTAMPTZ,

@@ -5,6 +5,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { WebSocketServer } from 'ws';
 import routes from './routes/index';
+import razorpayWebhookRoutes from './routes/razorpay-webhooks';
 import { startCallAgent } from './services/call-agent';
 import { startScheduler } from './services/call-scheduler';
 
@@ -31,6 +32,12 @@ app.use(cors({
   },
   credentials: true,
 }));
+
+// Razorpay webhooks must receive the raw body for HMAC-SHA256 signature verification.
+// Mount BEFORE express.json() so body-parser doesn't consume the stream first.
+// express.raw() sets req._body = true, which causes express.json() to skip these requests.
+app.use('/webhooks/razorpay', express.raw({ type: 'application/json' }), razorpayWebhookRoutes);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 

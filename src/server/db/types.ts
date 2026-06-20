@@ -15,13 +15,14 @@ export type FlagSeverity = 'low' | 'medium' | 'high' | 'urgent';
 export interface FamilyMember {
   id: string;
   auth_user_id: string | null;
-  full_name: string;
+  full_name: string | null;   // nullable — webhook-created rows set this during onboarding
   email: string;
-  phone: string;
+  phone: string | null;       // nullable — same reason
   whatsapp_number: string | null;
   preferred_brief_channel: BriefChannel;
   stripe_customer_id: string | null;
   stripe_subscription_id: string | null;
+  razorpay_subscription_id: string | null;
   subscription_status: SubscriptionStatus;
   trial_ends_at: string | null;
   timezone: string;

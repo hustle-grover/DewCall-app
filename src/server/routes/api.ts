@@ -31,21 +31,18 @@ async function getCallerFamilyMemberId(req: Request): Promise<string | null> {
 
 // ── ONBOARDING ───────────────────────────────────────────────────────────────
 
-// POST /api/onboarding/family
-// Creates (or updates) the caller's family_member profile row.
-router.post('/onboarding/family', async (req: Request, res: Response) => {
+// POST /api/onboarding/family  (also accepts PATCH — frontend sends PATCH)
+// Creates or updates the caller's family_member profile.
+// Three cases handled:
+//   1. Row exists by auth_user_id → update in place
+//   2. Row exists by email (webhook-pre-created, no auth_user_id) → link + update via admin
+//   3. No row at all → insert new row
+async function handleOnboardingFamily(req: Request, res: Response): Promise<void> {
   const body = req.body as Record<string, unknown>;
   if (!body['full_name'] || !body['phone']) {
     res.status(400).json({ error: 'full_name and phone are required' });
     return;
   }
-
-  // Upsert: update if row already exists for this auth user, otherwise insert.
-  const { data: existing } = await req.supabase
-    .from('family_members')
-    .select('id')
-    .eq('auth_user_id', req.authUser.id)
-    .maybeSingle();
 
   const fields = {
     full_name: body['full_name'] as string,
@@ -56,30 +53,65 @@ router.post('/onboarding/family', async (req: Request, res: Response) => {
     updated_at: new Date().toISOString(),
   };
 
-  let data, error;
-  if (existing) {
-    ({ data, error } = await req.supabase
+  // Case 1: row already linked to this auth user
+  const { data: existingByAuth } = await req.supabase
+    .from('family_members')
+    .select('id')
+    .eq('auth_user_id', req.authUser.id)
+    .maybeSingle();
+
+  if (existingByAuth) {
+    const { data, error } = await req.supabase
       .from('family_members')
       .update(fields)
-      .eq('id', existing.id as string)
+      .eq('id', existingByAuth.id as string)
       .select()
-      .single());
-  } else {
-    ({ data, error } = await req.supabase
-      .from('family_members')
-      .insert({ ...fields, auth_user_id: req.authUser.id, email: req.authUser.email! })
-      .select()
-      .single());
-  }
-
-  if (error) {
-    logger.error('POST /onboarding/family failed', { error });
-    res.status(500).json({ error: error.message });
+      .single();
+    if (error) { res.status(500).json({ error: error.message }); return; }
+    res.status(200).json({ familyMember: data });
     return;
   }
 
+  // Case 2: webhook-pre-created row exists by email (auth_user_id is NULL)
+  // Use supabaseAdmin because RLS blocks the user from seeing a row that isn't linked to them yet.
+  const { data: existingByEmail } = await supabaseAdmin
+    .from('family_members')
+    .select('id, auth_user_id')
+    .eq('email', req.authUser.email!)
+    .maybeSingle();
+
+  if (existingByEmail && !existingByEmail['auth_user_id']) {
+    const { data, error } = await supabaseAdmin
+      .from('family_members')
+      .update({ ...fields, auth_user_id: req.authUser.id })
+      .eq('id', existingByEmail['id'] as string)
+      .select()
+      .single();
+    if (error) {
+      logger.error('PATCH /onboarding/family: failed to link pre-created row', { error });
+      res.status(500).json({ error: error.message });
+      return;
+    }
+    res.status(200).json({ familyMember: data });
+    return;
+  }
+
+  // Case 3: fresh signup — insert new row
+  const { data, error } = await req.supabase
+    .from('family_members')
+    .insert({ ...fields, auth_user_id: req.authUser.id, email: req.authUser.email! })
+    .select()
+    .single();
+  if (error) {
+    logger.error('POST /onboarding/family: insert failed', { error });
+    res.status(500).json({ error: error.message });
+    return;
+  }
   res.status(201).json({ familyMember: data });
-});
+}
+
+router.post('/onboarding/family', handleOnboardingFamily);
+router.patch('/onboarding/family', handleOnboardingFamily);
 
 // POST /api/onboarding/senior
 // Creates the senior profile and links them to the calling family member.

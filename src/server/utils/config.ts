@@ -28,10 +28,13 @@ const configSchema = z.object({
   // Resend
   RESEND_API_KEY: z.string().min(1),
 
-  // Stripe
-  STRIPE_SECRET_KEY: z.string().min(1),
-  STRIPE_WEBHOOK_SECRET: z.string().min(1),
-  STRIPE_PRICE_ID: z.string().min(1),
+  // Stripe (optional — kept for future use; Razorpay is the active payment provider)
+  STRIPE_SECRET_KEY: z.string().min(1).optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().min(1).optional(),
+  STRIPE_PRICE_ID: z.string().min(1).optional(),
+
+  // Razorpay
+  RAZORPAY_WEBHOOK_SECRET: z.string().min(1).optional(),
 
   // App
   APP_URL: z.string().url(),
