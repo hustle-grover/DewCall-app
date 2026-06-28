@@ -8,7 +8,7 @@ import { generateOnboardingToken } from '../utils/onboarding-token';
 
 const router = Router();
 const resend = new Resend(config.RESEND_API_KEY);
-const FROM_EMAIL = 'DewCall <onboarding@resend.dev>';
+const FROM_EMAIL = 'DewCall <onboarding@dewcall.app>';
 
 // POST /webhooks/razorpay/payment
 // Receives raw Buffer body (mounted with express.raw() in index.ts — must stay before express.json()).
